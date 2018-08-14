@@ -18,6 +18,12 @@ repo_name=""
 root=""    # another name for MYANDROID_DIR
 # ==================== function definitions =========================
 
+if [ "$LINUX_FIRMWARE_IMX_PATH" = ""];then
+     LINUX_FIRMWARE_IMX_PATH="external"
+fi
+if [ "$IMX_LIB_PATH" = ""];then
+     IMX_LIB_PATH="external"
+fi
 
 checkResult()
 {
@@ -67,10 +73,10 @@ showHelp()
     echo "Usage : vpu_upgrade.sh parameters"
     echo "parameters:"
     echo "          -from [tag_from] "
-    echo "          -lib_to [lib_to]   - optional. target of external/imx-lib. default: up2date"
+    echo "          -lib_to [lib_to]   - optional. target of $(IMX_LIB_PATH)/imx-lib. default: up2date"
     echo "          -dir [path of myAndroid]"
     echo "          -patch [commit_file]       - optional. "
-    echo "          -firmware_to [firmware_to] - optional. default: up2date. commit or tag for external/linux-firmware-imx/firmware/vpu/"
+    echo "          -firmware_to [firmware_to] - optional. default: up2date. commit or tag for $(LINUX_FIRMWARE_IMX_PATH)/linux-firmware-imx/firmware/vpu/"
     echo "                                                 none: do not include firmware in package"
     echo ""
     echo "Example:  ./vpu_upgrade.sh -from imx-android-r9.2-rc3 -lib_to imx-android-r9.4-rc3 -dir ../../../"
@@ -215,7 +221,7 @@ set +x
 log " =============== checkout for $TAG_FROM ========================"
 set -x
 
-cd $root/external/imx-lib
+cd $root/$(IMX_LIB_PATH)/imx-lib
 cleanUpGit
 
 cd $root
@@ -231,7 +237,7 @@ else
 	fi
 fi
 
-cd $root/external/imx-lib
+cd $root/$(IMX_LIB_PATH)/imx-lib
 git tag | grep "$TAG_FROM"
 #if [ $? -ne 0 ]; then
 	#cd $root
@@ -243,7 +249,7 @@ if [ "$re_checkout_all" -eq 1 ]; then
 	$repo_cmd forall -c git checkout $TAG_FROM > log 2>&1;         # may fail
 fi
 
-cd $root/external/imx-lib
+cd $root/$(IMX_LIB_PATH)/imx-lib
 git checkout -f $TAG_FROM > log 2>&1 ;                                   checkResult
 
 current_date=`date +%Y%m%d_%H%M`
@@ -259,7 +265,7 @@ mkdir $target_dir
 cd $root
 
 set +x
-log "================ make patch for external/imx-lib ==========================="
+log "================ make patch for $(IMX_LIB_PATH)/imx-lib ==========================="
 set -x
 
 if [ "$TAG_FROM" = "$LIB_TO" ]; then
@@ -272,7 +278,7 @@ if [ "$make_vpu_lib_patch" = "true" ];then
 
 	echo search date of last commit in git log of $TAG_FROM
 
-	cd $root/external/imx-lib ;                                             checkResult
+	cd $root/$(IMX_LIB_PATH)/imx-lib ;                                             checkResult
 
 	git log --stat > git_log
 
@@ -310,7 +316,7 @@ if [ "$make_vpu_lib_patch" = "true" ];then
 	set -x
 
 	if [[ "$date_from" = 0 ]]; then
-	    echo read date_from fail in $TAG_FROM external/imx-lib!!!
+	    echo read date_from fail in $TAG_FROM $(IMX_LIB_PATH)/imx-lib!!!
 	    exit 0
 	fi
 
@@ -343,11 +349,11 @@ if [ "$make_vpu_lib_patch" = "true" ];then
 		    echo date_to is $date_to,commit_to is $commit_to
 		    break
 		else
-		    echo read date in git log of $tag_to in external/imx-lib fail!!!
+		    echo read date in git log of $tag_to in $(IMX_LIB_PATH)/imx-lib fail!!!
 		    exit 0
 		fi
 	    else
-		echo read git log of $tag_to in external/imx-lib fail!!!
+		echo read git log of $tag_to in $(IMX_LIB_PATH)/imx-lib fail!!!
 		exit 0
 	    fi
 	done < git_log
@@ -421,17 +427,17 @@ log " =================== check to TAG_FROM ========================="
 set -x
 
 if [ "$make_vpu_lib_patch" = "true" ];then
-	cd $root/external/imx-lib
+	cd $root/$(IMX_LIB_PATH)/imx-lib
 	git checkout $TAG_FROM > log 2>&1
 fi
 
 set +x
-log " ========== apply patch to TAG_FROM of  external/imx-lib =============="
+log " ========== apply patch to TAG_FROM of  $(IMX_LIB_PATH)/imx-lib =============="
 set -x
 
 if [ "$make_vpu_lib_patch" = "true" ];then
 
-	cd $root/external/imx-lib
+	cd $root/$(IMX_LIB_PATH)/imx-lib
 	mv all.patch vpu_lib.patch  ;                                      checkResult
 
 	cleanUpGit
@@ -450,7 +456,7 @@ set -x
 
 if [ "$FIRMWARE_TO" != "none" ]; then
 
-	cd ${root}/external/linux-firmware-imx;                                 checkResult
+	cd ${root}/$(LINUX_FIRMWARE_IMX_PATH)/linux-firmware-imx;                                 checkResult
 	cleanUpGit
 	git remote update
 
@@ -462,19 +468,19 @@ if [ "$FIRMWARE_TO" != "none" ]; then
 
 	cd $root
 	firmware_list=""
-	ls external/linux-firmware-imx/firmware/vpu/vpu_fw_imx5*.bin;
+	ls $(LINUX_FIRMWARE_IMX_PATH)/linux-firmware-imx/firmware/vpu/vpu_fw_imx5*.bin;
 	if [ $? = 0 ];then
-		file=`ls external/linux-firmware-imx/firmware/vpu/vpu_fw_imx5*.bin`
+		file=`ls $(LINUX_FIRMWARE_IMX_PATH)/linux-firmware-imx/firmware/vpu/vpu_fw_imx5*.bin`
 		firmware_list="$firmware_list $file"
 	fi
-	ls external/linux-firmware-imx/firmware/vpu/vpu_fw_imx6*.bin;
+	ls $(LINUX_FIRMWARE_IMX_PATH)/linux-firmware-imx/firmware/vpu/vpu_fw_imx6*.bin;
 	if [ $? = 0 ];then
-		file=`ls external/linux-firmware-imx/firmware/vpu/vpu_fw_imx6*.bin`
+		file=`ls $(LINUX_FIRMWARE_IMX_PATH)/linux-firmware-imx/firmware/vpu/vpu_fw_imx6*.bin`
 		firmware_list="$firmware_list $file"
 	fi
-	ls external/linux-firmware-imx/firmware/vpu/Android.mk;
+	ls $(LINUX_FIRMWARE_IMX_PATH)/linux-firmware-imx/firmware/vpu/Android.mk;
 	if [ $? = 0 ];then
-		file=`ls external/linux-firmware-imx/firmware/vpu/Android`
+		file=`ls $(LINUX_FIRMWARE_IMX_PATH)/linux-firmware-imx/firmware/vpu/Android`
 		firmware_list="$firmware_list $file"
 	fi
 
@@ -486,8 +492,8 @@ log "====================== collect packages ========================"
 set -x
 
 
-if [ -s $root/external/imx-lib/vpu_lib.patch ]; then
-    mv $root/external/imx-lib/vpu_lib.patch $target_dir;                  checkResult
+if [ -s $root/$(IMX_LIB_PATH)/imx-lib/vpu_lib.patch ]; then
+    mv $root/$(IMX_LIB_PATH)/imx-lib/vpu_lib.patch $target_dir;                  checkResult
 fi
 
 if [ "$FIRMWARE_TO" != "none" ]; then
@@ -507,7 +513,7 @@ fi
 readme_content="                         \n
 1.                                       \n
 If vpu_lib.patch exists          \n
-$ cd \${YOUR_ANDROID_SRC_DIR}/external/imx-lib \n
+$ cd \${YOUR_ANDROID_SRC_DIR}/$(IMX_LIB_PATH)/imx-lib \n
 $ git apply vpu_lib.patch        \n
                                          \n
 2.                                       \n
@@ -537,15 +543,15 @@ fi
 
 echo -e "tag_from = $TAG_FROM \n"                               >> log.txt
 echo "lib_to = $LIB_TO"                                 >> log.txt
-if [ -f ${root}/external/imx-lib/commit_log ]; then
-    echo "    last commit of external/imx-lib:"                  >> log.txt
-    cat ${root}/external/imx-lib/commit_log                      >> log.txt
-    rm -f ${root}/external/imx-lib/commit_log
+if [ -f ${root}/$(IMX_LIB_PATH)/imx-lib/commit_log ]; then
+    echo "    last commit of $(IMX_LIB_PATH)/imx-lib:"                  >> log.txt
+    cat ${root}/$(IMX_LIB_PATH)/imx-lib/commit_log                      >> log.txt
+    rm -f ${root}/$(IMX_LIB_PATH)/imx-lib/commit_log
 fi
 
 echo "firmware_to = $FIRMWARE_TO"                               >> log.txt
-echo "    last commit of external/linux-firmware-imx:"          >> log.txt
-cd ${root}/external/linux-firmware-imx;                         checkResult
+echo "    last commit of $(LINUX_FIRMWARE_IMX_PATH)/linux-firmware-imx:"          >> log.txt
+cd ${root}/$(LINUX_FIRMWARE_IMX_PATH)/linux-firmware-imx;                         checkResult
 GetLastCommit ${target_dir}/log.txt
 cd $target_dir
 

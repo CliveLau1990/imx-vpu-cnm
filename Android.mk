@@ -1,8 +1,15 @@
 ifneq ($(PREBUILT_FSL_IMX_VPU),true)
 ifeq ($(BOARD_HAVE_VPU),true)
-ifneq ($(BOARD_VPU_TYPE), hantro)
+ifeq ($(BOARD_VPU_TYPE), chipsmedia)
 
 LOCAL_PATH := $(call my-dir)
+
+ifeq ($(FSL_PROPRIETARY_PATH),)
+     FSL_PROPRIETARY_PATH := device
+endif
+ifeq ($(IMX_PATH),)
+     IMX_PATH := hardware
+endif
 
 # Share library
 include $(CLEAR_VARS)
@@ -20,7 +27,7 @@ endif
 ifeq ($(USE_GPU_ALLOCATOR), true)
 LOCAL_CFLAGS += -DUSE_GPU=1
 ifneq ($(BUILD_IN_ANDROIDTHINGS),true)
-LOCAL_C_INCLUDES += device/fsl-proprietary/include
+LOCAL_C_INCLUDES += $(FSL_PROPRIETARY_PATH)/fsl-proprietary/include
 else
 LOCAL_C_INCLUDES += device/nxp/$(TARGET_BOOTLOADER_BOARD_NAME)/include
 endif
@@ -31,7 +38,7 @@ LOCAL_CFLAGS += -DUSE_ION
 LOCAL_SHARED_LIBRARIES := libutils libc liblog libion
 ifneq ($(BUILD_IN_ANDROIDTHINGS),true)
 LOCAL_C_INCLUDES += device/fsl/common/kernel-headers \
-                    hardware/imx/include
+                    $(IMX_PATH)/imx/include
 else
 LOCAL_C_INCLUDES += device/nxp/$(TARGET_BOOTLOADER_BOARD_NAME)/kernel-headers \
                     device/nxp/$(TARGET_BOOTLOADER_BOARD_NAME)/include
